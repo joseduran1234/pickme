@@ -1,0 +1,26 @@
+Pick.me
+Version: 1.0.0
+Author: Kea B. & Jose D. 
+
+Table of Contents
+
+1. Introduction 
+2. Filters
+
+
+
+Introduction
+
+This project is a an LLM agent for actors trying to break into Hollywood. It's meant to remove the friction and administrative work of applying to acting gigs in Los Angeles. 
+
+
+Filters
+- Breakdowns (submit projects posted on Actors Access)
+	- Date, Title, Type, Casting Director, start date, union, region
+- Photos & Slateshots (manage photos)
+- About Me ( key profile info, special skills, union, role matching criteria)
+- Auditions (auditions, callbacks, etc)
+- Videos (manage video and audio)
+- Cmail (connect with casting and talent representatives)
+
+
