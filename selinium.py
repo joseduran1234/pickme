@@ -86,10 +86,25 @@ def get_projects(driver):
             start_date = row.find_element(By.CSS_SELECTOR, "td.bd_start").text.strip()
             union = row.find_element(By.CSS_SELECTOR, "td.bd_union").text.strip()
             
+            # Find the title cell and extract the URL from the <a> element within it.
+            title_cells = row.find_elements(By.CSS_SELECTOR, "td.bd_title")
+            if not title_cells:
+                print("No title cell found, skipping row.")
+                continue
+            title_element = title_cells[0]
+
+            # Extract the URL from the <a> element within the title cell.
+            url = title_element.find_element(By.CSS_SELECTOR, "a").get_attribute("href")
+            type_project = row.find_element(By.CSS_SELECTOR, "td.bd_type").text.strip()
+            casting_director = row.find_element(By.CSS_SELECTOR, "td.bd_castdir").text.strip()
+            start_date = row.find_element(By.CSS_SELECTOR, "td.bd_start").text.strip()
+            union = row.find_element(By.CSS_SELECTOR, "td.bd_union").text.strip()
+           
             # Create a dictionary for the project
             project_details = {
                 "date": date,
                 "title": title,
+                "url": url,
                 "type": type_project,
                 "casting_director": casting_director,
                 "start_date": start_date,
@@ -113,6 +128,38 @@ def get_projects(driver):
 # projects = get_projects(driver)
 # print(projects)
 
+def scrape_project_pages(driver, projects):
+    """
+    For each project in the projects dictionary, navigates to the project's URL
+    and scrapes all the text from the page.
+
+    Args:
+        driver: A Selenium WebDriver instance.
+        projects: A dictionary of projects, each having a "url" key.
+
+    Returns:
+        The updated projects dictionary with an additional "page_text" key for each project.
+    """
+    for title, details in projects.items():
+        project_url = details.get("url")
+        if not project_url:
+            print(f"No URL found for project: {title}")
+            continue
+        try:
+            # Navigate to the project's page
+            driver.get(project_url)
+            # Wait for the page to load. Adjust the sleep duration as needed.
+            time.sleep(1)
+            # Scrape all text from the page (for example, the text in the <body> tag)
+            page_text = driver.find_element(By.TAG_NAME, "body").text
+            # Add the scraped text to the project's details
+            details["page_text"] = page_text
+            print(f"Scraped text for project: {title}")
+        except Exception as e:
+            print(f"Error scraping text from {project_url}: {e}")
+            details["page_text"] = None
+    return projects
+
 #Main Execution (Use the defined functions to perform the login automation)
 if __name__ == "__main__":
     # url = "https://actorsaccess.com/actor/"
@@ -125,8 +172,10 @@ if __name__ == "__main__":
     
     # Perform login
     login(driver, username, password)
-
-    print(get_projects(driver))
+    
+    projects = get_projects(driver)
+    projects = scrape_project_pages(driver, projects)
+    print(projects)
     
     # Close the browser
     close_browser(driver)
