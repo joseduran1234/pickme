@@ -58,8 +58,6 @@ def login(driver, username, password):
 def close_browser(driver):
     driver.quit()
 
-
-
 # Function to get the project data from the breakdowns page
 def get_projects(driver):
     """
@@ -160,6 +158,40 @@ def scrape_project_pages(driver, projects):
             details["page_text"] = None
     return projects
 
+# Scrape all pages by clicking the "next" button until the last page is reached.
+def scrape_all_pages(driver):
+    """
+    Iterates through all pages by clicking the "next" button until the last page is reached.
+    On each page, it scrapes the projects and then flips to the next page.
+    
+    Returns:
+        A dictionary with all projects scraped from every page.
+    """
+    all_projects = {}
+    page_number = 1
+    while True:
+        print(f"Scraping page {page_number}...")
+        # Scrape projects on the current page.
+        projects = get_projects(driver)
+        all_projects.update(projects)
+        
+        try:
+            # **UPDATED:** Try to locate the "next page" button by its CSS class.
+            next_button = driver.find_element(By.CSS_SELECTOR, "a.aa-projects-next")
+            # Check if the next button is disabled (this depends on how the site indicates a disabled state)
+            if "disabled" in next_button.get_attribute("class"):
+                print("Next button is disabled; reached the last page.")
+                break
+            
+            # Click the next button to go to the next page.
+            next_button.click()
+            page_number += 1
+            time.sleep(1)  # Wait for the new page to load.
+        except Exception as e:
+            print(f"Error finding or clicking next page: {e}")
+            break
+    return all_projects
+
 #Main Execution (Use the defined functions to perform the login automation)
 if __name__ == "__main__":
     # url = "https://actorsaccess.com/actor/"
@@ -175,7 +207,13 @@ if __name__ == "__main__":
     
     projects = get_projects(driver)
     projects = scrape_project_pages(driver, projects)
+    all_projects = scrape_project_pages(driver, get_projects)
     print(projects)
     
     # Close the browser
     close_browser(driver)
+
+    from pprint import pprint
+
+# ... after scraping projects
+pprint(projects)
