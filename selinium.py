@@ -14,6 +14,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from pprint import pprint
 
 # Function to open the browser in full-screen mode
 def open_browser_in_full_screen(url):
@@ -93,10 +94,6 @@ def get_projects(driver):
 
             # Extract the URL from the <a> element within the title cell.
             url = title_element.find_element(By.CSS_SELECTOR, "a").get_attribute("href")
-            type_project = row.find_element(By.CSS_SELECTOR, "td.bd_type").text.strip()
-            casting_director = row.find_element(By.CSS_SELECTOR, "td.bd_castdir").text.strip()
-            start_date = row.find_element(By.CSS_SELECTOR, "td.bd_start").text.strip()
-            union = row.find_element(By.CSS_SELECTOR, "td.bd_union").text.strip()
            
             # Create a dictionary for the project
             project_details = {
@@ -126,6 +123,8 @@ def get_projects(driver):
 # projects = get_projects(driver)
 # print(projects)
 
+# Suggestion : Rename this. This function accesses the url of each project. 
+# It does not scrape multiple pages
 def scrape_project_pages(driver, projects):
     """
     For each project in the projects dictionary, navigates to the project's URL
@@ -159,6 +158,9 @@ def scrape_project_pages(driver, projects):
     return projects
 
 # Scrape all pages by clicking the "next" button until the last page is reached.
+
+# Suggestion : rewrite this. Do not include while true. can break.
+# Maybe select the first 5 or something?
 def scrape_all_pages(driver):
     """
     Iterates through all pages by clicking the "next" button until the last page is reached.
@@ -170,14 +172,16 @@ def scrape_all_pages(driver):
     all_projects = {}
     page_number = 1
     while True:
+    # UNCOMMENT THIS IF YOU ONLY WANT THE FIRST 5
+    # for page_numer in range(1,6):
         print(f"Scraping page {page_number}...")
         # Scrape projects on the current page.
+        driver.get('https://actorsaccess.com/projects/?view=breakdowns&region=5&page='+str(page_number))
         projects = get_projects(driver)
         all_projects.update(projects)
-        
         try:
             # **UPDATED:** Try to locate the "next page" button by its CSS class.
-            next_button = driver.find_element(By.CSS_SELECTOR, "a.aa-projects-next")
+            next_button = driver.find_element(By.CSS_SELECTOR, "breakdown_next")
             # Check if the next button is disabled (this depends on how the site indicates a disabled state)
             if "disabled" in next_button.get_attribute("class"):
                 print("Next button is disabled; reached the last page.")
@@ -205,15 +209,17 @@ if __name__ == "__main__":
     # Perform login
     login(driver, username, password)
     
-    projects = get_projects(driver)
-    projects = scrape_project_pages(driver, projects)
-    all_projects = scrape_project_pages(driver, get_projects)
-    print(projects)
-    
+    # projects = get_projects(driver)
+    # projects = scrape_project_pages(driver, projects)
+    # all_projects = scrape_project_pages(driver, projects)
+
+    project_dictionary = scrape_all_pages(driver)
+    all_projects = scrape_project_pages(driver, project_dictionary)
+    # pprint(all_projects)
     # Close the browser
     close_browser(driver)
 
-    from pprint import pprint
+
 
 # ... after scraping projects
-pprint(projects)
+# pprint(projects)
