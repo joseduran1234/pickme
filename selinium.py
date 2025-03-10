@@ -19,6 +19,8 @@ from pprint import pprint
 import re
 from bs4 import BeautifulSoup
 
+import pandas as pd
+
 # Function to open the browser in full-screen mode
 def open_browser_in_full_screen(url):
     # Setup Chrome options
@@ -32,7 +34,7 @@ def open_browser_in_full_screen(url):
     driver.get(url)
     
     # Wait to make sure the page loads (you can adjust this depending on your network speed)
-    time.sleep(3)
+    time.sleep(1)
     
     # Maximize the window just in case it's not fully expanded
     driver.maximize_window()
@@ -56,7 +58,7 @@ def login(driver, username, password):
     password_field.send_keys(Keys.RETURN)
     
     # Wait for the login process to complete
-    time.sleep(15)
+    time.sleep(5)
 
 #Close Browser Function
 def close_browser(driver):
@@ -140,7 +142,10 @@ def scrape_project_pages(driver, projects):
     Returns:
         The updated projects dictionary with an additional "page_text" key for each project.
     """
+    project_counter = 1
     for title, details in projects.items():
+        print('progress = ', 100*project_counter/len(projects), '%')
+        project_counter += 1
         project_url = details.get("url")
         if not project_url:
             print(f"No URL found for project: {title}")
@@ -149,7 +154,7 @@ def scrape_project_pages(driver, projects):
             # Navigate to the project's page
             driver.get(project_url)
             # Wait for the page to load. Adjust the sleep duration as needed.
-            time.sleep(1)
+            time.sleep(0.5)
             # Scrape all text from the page (for example, the text in the <body> tag)
             page_text = driver.find_element(By.TAG_NAME, "body").text
             # Add the scraped text to the project's details
@@ -226,7 +231,7 @@ def get_last_page_number(driver):
     html = driver.page_source
     soup = BeautifulSoup(html, "html.parser")
     # Find the text that matches the pagination pattern, e.g., "Page 1 of 37"
-    pagination_text = soup.find(text=re.compile(r"Page\s+\d+\s+of\s+\d+"))
+    pagination_text = soup.find(string=re.compile(r"Page\s+\d+\s+of\s+\d+"))
     if pagination_text:
         match = re.search(r"Page\s+\d+\s+of\s+(\d+)", pagination_text)
         if match:
@@ -254,6 +259,41 @@ def scrape_all_pages(driver):
     return all_projects
 
 
+def create_excel_from_projects(projects_dict, file_name="scraped_projects.xlsx"):
+    """
+    Converts a projects dictionary into a pandas DataFrame and writes it to an Excel file.
+    
+    Args:
+        projects_dict (dict): Dictionary where each key is the project title and the value is
+                              another dictionary containing project details.
+        file_name (str): The output Excel file name. Defaults to "scraped_projects.xlsx".
+    
+    Returns:
+        None. The function writes the Excel file to disk.
+    """
+    # Convert the projects dictionary into a list of dictionaries.
+    # Here, we ensure the project title (key) is also stored in the dictionary.
+    data_list = []
+    for title, details in projects_dict.items():
+        # Add title to details if not already present.
+        details["title"] = title
+        data_list.append(details)
+    
+    # Create a DataFrame from the list.
+    df = pd.DataFrame(data_list)
+    
+    # Optionally, reorder the columns.
+    # desired_columns = ["title", "date", "url", "type", "casting_director", "start_date", "union", "page_text"]
+    desired_columns = ['title', 'casting_director', 'union', 'date', 'start_date', 'type',  'url', 'page_text']
+    # Only include columns that are present in the DataFrame.
+    columns_to_use = [col for col in desired_columns if col in df.columns]
+    df = df[columns_to_use]
+    
+    # Save the DataFrame to an Excel file.
+    df.to_excel(file_name, index=False)
+    print(f"Excel file '{file_name}' created with {len(df)} records.")
+
+
 
 #Main Execution (Use the defined functions to perform the login automation)
 if __name__ == "__main__":
@@ -277,6 +317,7 @@ if __name__ == "__main__":
     all_project_listings = scrape_all_pages(driver)
     print(f"Total projects scraped from listings: {len(all_project_listings)}")
     all_projects = scrape_project_pages(driver, all_project_listings)
+    create_excel_from_projects(all_projects)
     # pprint(all_projects)
     # Close the browser
     close_browser(driver)
