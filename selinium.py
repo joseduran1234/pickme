@@ -16,6 +16,9 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from pprint import pprint
 
+import re
+from bs4 import BeautifulSoup
+
 # Function to open the browser in full-screen mode
 def open_browser_in_full_screen(url):
     # Setup Chrome options
@@ -161,7 +164,7 @@ def scrape_project_pages(driver, projects):
 
 # Suggestion : rewrite this. Do not include while true. can break.
 # Maybe select the first 5 or something?
-def scrape_all_pages(driver):
+#def scrape_all_pages(driver):
     """
     Iterates through all pages by clicking the "next" button until the last page is reached.
     On each page, it scrapes the projects and then flips to the next page.
@@ -196,6 +199,62 @@ def scrape_all_pages(driver):
             break
     return all_projects
 
+# **New function: scrape_page to scrape a single page by page number.**
+def scrape_page(driver, page_number):
+    url = f"https://actorsaccess.com/projects/?view=breakdowns&region=5&page={page_number}"
+    driver.get(url)
+    time.sleep(1)  # Wait for the page to load; adjust timing if needed.
+    print(f"Scraping page {page_number} at {url}")
+    return get_projects(driver)
+
+# #goes through the next page 
+# def scrape_all_pages(driver):
+#     all_projects = {}
+#     page_number = 1
+#     while True:
+#         projects = scrape_page(driver, page_number)  # Call to scrape_page
+#         if not projects:
+#             print("No projects found on this page. Reached the last page.")
+#             break
+#         all_projects.update(projects)
+#         page_number += 1
+#     return all_projects
+
+
+def get_last_page_number(driver):
+    # Get the current page source from the driver
+    html = driver.page_source
+    soup = BeautifulSoup(html, "html.parser")
+    # Find the text that matches the pagination pattern, e.g., "Page 1 of 37"
+    pagination_text = soup.find(text=re.compile(r"Page\s+\d+\s+of\s+\d+"))
+    if pagination_text:
+        match = re.search(r"Page\s+\d+\s+of\s+(\d+)", pagination_text)
+        if match:
+            return int(match.group(1))
+    return None
+
+def scrape_all_pages(driver):
+    all_projects = {}
+    # Determine the last page dynamically.
+    last_page = get_last_page_number(driver)
+    if last_page is None:
+        print("Unable to determine the last page number. Exiting scrape.")
+        return all_projects
+
+    page_number = 1
+    while page_number <= last_page:
+        projects = scrape_page(driver, page_number)
+        if not projects:
+            print(f"No projects found on page {page_number}. Ending scrape.")
+            break
+        all_projects.update(projects)
+        print(f"Scraped page {page_number} of {last_page}")
+        page_number += 1
+
+    return all_projects
+
+
+
 #Main Execution (Use the defined functions to perform the login automation)
 if __name__ == "__main__":
     # url = "https://actorsaccess.com/actor/"
@@ -213,8 +272,11 @@ if __name__ == "__main__":
     # projects = scrape_project_pages(driver, projects)
     # all_projects = scrape_project_pages(driver, projects)
 
-    project_dictionary = scrape_all_pages(driver)
-    all_projects = scrape_project_pages(driver, project_dictionary)
+    #project_dictionary = scrape_all_pages(driver)
+    # **Phase 2: Scrape listings across all pages using scrape_all_pages.**
+    all_project_listings = scrape_all_pages(driver)
+    print(f"Total projects scraped from listings: {len(all_project_listings)}")
+    all_projects = scrape_project_pages(driver, all_project_listings)
     # pprint(all_projects)
     # Close the browser
     close_browser(driver)
