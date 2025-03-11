@@ -1,6 +1,4 @@
-🎭 pickme
-
-Automate Your Acting Career! 🌟
+🎭 Automate Your Acting Career w/ pickme! 🌟
 
 Overview: pickme is a Python-driven automation tool designed to streamline the audition application process for actors. By leveraging Selenium for web scraping and integrating with Large Language Models (LLMs), pickme identifies and applies to casting calls that align with an actor's unique profile.
 
