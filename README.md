@@ -4,7 +4,6 @@ Overview: pickme is a Python-driven automation tool designed to streamline the a
 
 Features:
 - Web Scraping: Utilizes Selenium to navigate Actors Access and extract casting calls based in Los Angeles.​
-stackoverflow.com
 
 - Data Organization: Compiles scraped data into an Excel sheet, facilitating easy review and management.​
 
