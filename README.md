@@ -11,4 +11,4 @@ Features:
 
 - Automated Applications: Employs LLMs to generate tailored applications, automating the submission process on behalf of the actor.
 
-Join the Revolution: Embrace the future of auditioning with pickme and let automation elevate your acting journey! 🎬🚀
+Join the Revolution: Embrace the future of applying for acting roles with pickme and let automation elevate your acting journey! 🎬🚀
